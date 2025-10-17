@@ -1,13 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckCircle, Clock, AlertCircle, TrendingUp } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { Card } from '../components/ui/Card';
 import { TaskCard } from '../components/TaskCard';
+import apiService from '../services/api';
 
 export const Dashboard: React.FC = () => {
-  const { state, getTaskStats } = useApp();
+  const { state, getTaskStats, dispatch } = useApp();
   const stats = getTaskStats();
   const recentTasks = state.tasks.slice(0, 3);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const tasksResponse = await apiService.getTasks();
+      dispatch({ type: 'SET_TASKS', payload: tasksResponse.tasks });
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    }
+  };
 
   const statCards = [
     {
@@ -51,7 +65,6 @@ export const Dashboard: React.FC = () => {
         </p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map(({ title, value, icon: Icon, color, bgColor }) => (
           <Card key={title} className="space-y-4">
@@ -72,27 +85,25 @@ export const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Recent Tasks */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Recent Tasks
           </h2>
-          {state.tasks.length === 0 && (
-            <div className="text-center py-8">
-              <AlertCircle className="mx-auto text-gray-400" size={48} />
-              <p className="text-gray-500 dark:text-gray-400 mt-2">
-                No tasks yet. Create your first task to get started!
-              </p>
-            </div>
-          )}
         </div>
         
-        {recentTasks.length > 0 && (
+        {state.tasks.length === 0 ? (
+          <div className="text-center py-8">
+            <AlertCircle className="mx-auto text-gray-400" size={48} />
+            <p className="text-gray-500 dark:text-gray-400 mt-2">
+              No tasks yet. Create your first task to get started!
+            </p>
+          </div>
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {recentTasks.map((task) => (
               <TaskCard
-                key={task.id}
+                key={task._id}
                 task={task}
                 onEdit={() => {}}
                 onDelete={() => {}}
@@ -103,7 +114,6 @@ export const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* AI Suggestions */}
       <Card className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           AI Suggestions

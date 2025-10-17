@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer } from 'react';
 import type { ReactNode } from 'react';
 import type { Task, User, ChatMessage, TaskStats } from '../types';
-import { getUserTasks, saveUserTasks, getUserChatMessages, saveUserChatMessages } from '../utils/userTasks';
+import { getUserTasks } from '../utils/userTasks';
 
 interface AppState {
   tasks: Task[];
@@ -48,13 +48,13 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return {
         ...state,
         tasks: state.tasks.map(task =>
-          task.id === action.payload.id ? action.payload : task
+          task._id === action.payload._id ? action.payload : task
         ),
       };
     case 'DELETE_TASK':
       return {
         ...state,
-        tasks: state.tasks.filter(task => task.id !== action.payload),
+        tasks: state.tasks.filter(task => task._id !== action.payload),
       };
     case 'SET_TASKS':
       return { ...state, tasks: action.payload };
@@ -69,16 +69,12 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
     case 'LOGIN_START':
       return { ...state, authLoading: true, authError: null };
     case 'LOGIN_SUCCESS':
-      const userTasks = getUserTasks(action.payload.id);
-      const userMessages = getUserChatMessages(action.payload.id);
       return { 
         ...state, 
         user: action.payload, 
         isAuthenticated: true, 
         authLoading: false, 
-        authError: null,
-        tasks: userTasks,
-        chatMessages: userMessages
+        authError: null
       };
     case 'LOGIN_ERROR':
       return { 
@@ -113,13 +109,20 @@ const AppContext = createContext<{
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Save user data when state changes
   React.useEffect(() => {
-    if (state.user && state.isAuthenticated) {
-      saveUserTasks(state.user.id, state.tasks);
-      saveUserChatMessages(state.user.id, state.chatMessages);
-    }
-  }, [state.tasks, state.chatMessages, state.user, state.isAuthenticated]);
+    const loadUserData = async () => {
+      if (state.user && state.isAuthenticated) {
+        try {
+          const tasks = await getUserTasks();
+          dispatch({ type: 'SET_TASKS', payload: tasks });
+        } catch (error) {
+          console.error('Failed to load user data:', error);
+        }
+      }
+    };
+
+    loadUserData();
+  }, [state.user, state.isAuthenticated]);
 
   const getTaskStats = (): TaskStats => {
     const total = state.tasks.length;

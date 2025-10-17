@@ -18,10 +18,12 @@ export const AIAssistant: React.FC = () => {
 
     // Add user message
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      _id: Date.now().toString(),
       message: inputMessage,
       isUser: true,
-      timestamp: new Date().toISOString(),
+      userId: state.user?._id || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     dispatch({ type: 'ADD_CHAT_MESSAGE', payload: userMessage });
 
@@ -32,10 +34,12 @@ export const AIAssistant: React.FC = () => {
     // Simulate AI response delay
     setTimeout(() => {
       const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        _id: (Date.now() + 1).toString(),
         message: getAIResponse(inputMessage),
         isUser: false,
-        timestamp: new Date().toISOString(),
+        userId: state.user?._id || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       dispatch({ type: 'ADD_CHAT_MESSAGE', payload: aiResponse });
       setIsTyping(false);
@@ -129,7 +133,7 @@ export const AIAssistant: React.FC = () => {
           ) : (
             state.chatMessages.map((message) => (
               <div
-                key={message.id}
+                key={message._id}
                 className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
               >
                 <div
@@ -145,7 +149,7 @@ export const AIAssistant: React.FC = () => {
                     <p className="text-sm">{message.message}</p>
                   </div>
                   <p className="text-xs opacity-70 mt-1">
-                    {new Date(message.timestamp).toLocaleTimeString()}
+                    {new Date(message.createdAt).toLocaleTimeString()}
                   </p>
                 </div>
               </div>

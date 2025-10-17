@@ -1,40 +1,45 @@
 import type { Task, User } from '../types';
 
 export const mockUser: User = {
-  id: '1',
+  _id: '1',
   name: 'John Doe',
   email: 'john.doe@example.com',
-  avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+  avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+  createdAt: '2024-01-01T10:00:00Z',
+  updatedAt: '2024-01-01T10:00:00Z'
 };
 
 export const mockTasks: Task[] = [
   {
-    id: '1',
+    _id: '1',
     title: 'Complete project proposal',
     description: 'Finish the Q4 project proposal for the new client',
     priority: 'high',
     status: 'in-progress',
     dueDate: '2024-01-15',
+    userId: '1',
     createdAt: '2024-01-01T10:00:00Z',
     updatedAt: '2024-01-10T14:30:00Z'
   },
   {
-    id: '2',
+    _id: '2',
     title: 'Review code changes',
     description: 'Review pull requests from the development team',
     priority: 'medium',
     status: 'todo',
     dueDate: '2024-01-12',
+    userId: '1',
     createdAt: '2024-01-08T09:00:00Z',
     updatedAt: '2024-01-08T09:00:00Z'
   },
   {
-    id: '3',
+    _id: '3',
     title: 'Update documentation',
     description: 'Update API documentation with new endpoints',
     priority: 'low',
     status: 'completed',
     dueDate: '2024-01-10',
+    userId: '1',
     createdAt: '2024-01-05T11:00:00Z',
     updatedAt: '2024-01-09T16:00:00Z'
   }

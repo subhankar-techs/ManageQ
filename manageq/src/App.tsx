@@ -5,7 +5,7 @@ import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
 import { Footer } from './components/layout/Footer';
 
-import { Home } from './pages/Home';
+// import { Home } from './pages/Home';
 import { Dashboard } from './pages/Dashboard';
 import { Tasks } from './pages/Tasks';
 import { AIAssistant } from './pages/AIAssistant';
@@ -13,23 +13,26 @@ import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { getCurrentUser } from './utils/auth';
-import { mockTasks } from './utils/mockData';
 
 const AppContent: React.FC = () => {
   const { state, dispatch } = useApp();
 
   useEffect(() => {
-    // Check for existing user session
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      dispatch({ type: 'LOGIN_SUCCESS', payload: currentUser });
-      // Load user's tasks (in a real app, this would be fetched from API)
-      dispatch({ type: 'SET_TASKS', payload: mockTasks });
-    }
+    const checkAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          dispatch({ type: 'LOGIN_SUCCESS', payload: currentUser });
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      }
+    };
+
+    checkAuth();
   }, [dispatch]);
 
   useEffect(() => {
-    // Apply dark mode class to document
     if (state.isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
@@ -37,7 +40,6 @@ const AppContent: React.FC = () => {
     }
   }, [state.isDarkMode]);
 
-  // Show auth pages without layout
   if (!state.isAuthenticated) {
     return (
       <div className={state.isDarkMode ? 'dark' : ''}>
@@ -58,7 +60,7 @@ const AppContent: React.FC = () => {
         <main className="flex-1 lg:ml-64">
           <div className="p-6">
             <Routes>
-              <Route path="/" element={<Home />} />
+              {/* <Route path="/" element={<Home />} /> */}
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/tasks" element={<Tasks />} />
               <Route path="/ai-assistant" element={<AIAssistant />} />

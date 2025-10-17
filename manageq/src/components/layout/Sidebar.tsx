@@ -1,11 +1,11 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, LayoutDashboard, CheckSquare, Bot, User, X } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Bot, User, X } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { Button } from '../ui/Button';
 
 const navItems = [
-  { to: '/', icon: Home, label: 'Home' },
+  // { to: '/', icon: Home, label: 'Home' },
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/tasks', icon: CheckSquare, label: 'Tasks' },
   { to: '/ai-assistant', icon: Bot, label: 'AI Assistant' },

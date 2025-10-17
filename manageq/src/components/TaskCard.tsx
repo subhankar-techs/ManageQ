@@ -48,7 +48,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <Button
               variant="danger"
               size="sm"
-              onClick={() => onDelete(task.id)}
+              onClick={() => onDelete(task._id)}
               className="p-1"
             >
               <Trash2 size={14} />

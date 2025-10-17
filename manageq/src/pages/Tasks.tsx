@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import type { Task } from '../types';
@@ -7,6 +7,7 @@ import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
 import { Modal } from '../components/ui/Modal';
 import { TaskCard } from '../components/TaskCard';
+import apiService from '../services/api';
 
 export const Tasks: React.FC = () => {
   const { state, dispatch } = useApp();
@@ -15,6 +16,7 @@ export const Tasks: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -23,6 +25,22 @@ export const Tasks: React.FC = () => {
     status: 'todo' as Task['status'],
     dueDate: '',
   });
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const loadTasks = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getTasks();
+      dispatch({ type: 'SET_TASKS', payload: response.tasks });
+    } catch (error) {
+      console.error('Failed to load tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredTasks = state.tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -33,27 +51,26 @@ export const Tasks: React.FC = () => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingTask) {
-      const updatedTask: Task = {
-        ...editingTask,
-        ...formData,
-        updatedAt: new Date().toISOString(),
-      };
-      dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
-    } else {
-      const newTask: Task = {
-        id: Date.now().toString(),
-        ...formData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      dispatch({ type: 'ADD_TASK', payload: newTask });
+    try {
+      setLoading(true);
+      
+      if (editingTask) {
+        const response = await apiService.updateTask(editingTask._id, formData);
+        dispatch({ type: 'UPDATE_TASK', payload: response.task });
+      } else {
+        const response = await apiService.createTask(formData);
+        dispatch({ type: 'ADD_TASK', payload: response.task });
+      }
+      
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save task:', error);
+    } finally {
+      setLoading(false);
     }
-    
-    handleCloseModal();
   };
 
   const handleCloseModal = () => {
@@ -75,22 +92,28 @@ export const Tasks: React.FC = () => {
       description: task.description,
       priority: task.priority,
       status: task.status,
-      dueDate: task.dueDate,
+      dueDate: task.dueDate.split('T')[0], // Format for date input
     });
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    dispatch({ type: 'DELETE_TASK', payload: id });
+  const handleDelete = async (id: string) => {
+    try {
+      await apiService.deleteTask(id);
+      dispatch({ type: 'DELETE_TASK', payload: id });
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
   };
 
-  const handleToggleComplete = (task: Task) => {
-    const updatedTask: Task = {
-      ...task,
-      status: task.status === 'completed' ? 'todo' : 'completed',
-      updatedAt: new Date().toISOString(),
-    };
-    dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+  const handleToggleComplete = async (task: Task) => {
+    try {
+      const updatedStatus = task.status === 'completed' ? 'todo' : 'completed';
+      const response = await apiService.updateTask(task._id, { status: updatedStatus });
+      dispatch({ type: 'UPDATE_TASK', payload: response.task });
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    }
   };
 
   return (
@@ -110,7 +133,6 @@ export const Tasks: React.FC = () => {
         </Button>
       </div>
 
-      {/* Filters */}
       <Card className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
@@ -160,7 +182,6 @@ export const Tasks: React.FC = () => {
         </div>
       </Card>
 
-      {/* Tasks Grid */}
       {filteredTasks.length === 0 ? (
         <Card className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400">
@@ -174,7 +195,7 @@ export const Tasks: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTasks.map((task) => (
             <TaskCard
-              key={task.id}
+              key={task._id}
               task={task}
               onEdit={handleEdit}
               onDelete={handleDelete}
@@ -184,7 +205,6 @@ export const Tasks: React.FC = () => {
         </div>
       )}
 
-      {/* Task Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -251,7 +271,7 @@ export const Tasks: React.FC = () => {
           />
           
           <div className="flex space-x-3 pt-4">
-            <Button type="submit" className="flex-1">
+            <Button type="submit" className="flex-1" disabled={loading}>
               {editingTask ? 'Update Task' : 'Create Task'}
             </Button>
             <Button type="button" variant="secondary" onClick={handleCloseModal}>

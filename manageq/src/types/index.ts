@@ -1,26 +1,31 @@
 export interface Task {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high';
   status: 'todo' | 'in-progress' | 'completed';
   dueDate: string;
+  userId: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   avatar?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ChatMessage {
-  id: string;
+  _id: string;
   message: string;
   isUser: boolean;
-  timestamp: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TaskStats {
